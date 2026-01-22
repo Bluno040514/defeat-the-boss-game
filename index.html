@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>打爆老板小游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .game-container {
+            width: 100%;
+            max-width: 800px;
+            height: 600px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 开始界面 */
+        .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #4834d4, #686de0);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            transition: opacity 0.5s ease;
+        }
+        
+        .start-screen h1 {
+            color: #fff;
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        
+        .start-button {
+            background: #ff6b6b;
+            color: #fff;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .start-button:hover {
+            background: #ee5a24;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .start-button:active {
+            transform: translateY(0);
+        }
+        
+        /* 游戏界面 */
+        .game-screen {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: none;
+        }
+        
+        .game-header {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 1rem 1rem 1rem 8rem; /* 左侧留出空间给返回按钮 */
+            background: #333;
+            color: #fff;
+            position: relative;
+        }
+        
+        /* 返回首页按钮样式 */
+        .home-button {
+            background: #ff6b6b;
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100; /* 确保按钮在最上层 */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); /* 添加阴影增加立体感 */
+        }
+        
+        .home-button:hover {
+            background: #ee5a24;
+            transform: translateY(-50%) scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+        
+        .score, .lives {
+            margin: 0 1rem;
+        }
+        
+        .score, .lives {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: calc(100% - 80px);
+            background: #f0f0f0;
+        }
+        
+        /* 结束界面 */
+        .end-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #222f3e, #576574);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            color: #fff;
+        }
+        
+        .end-screen h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .final-score {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .restart-button {
+            background: #10ac84;
+            color: #fff;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .restart-button:hover {
+            background: #009432;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .restart-button:active {
+            transform: translateY(0);
+        }
+        
+        /* 捏脸界面样式 */
+        .customize-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            z-index: 10;
+            overflow: auto;
+        }
+        
+        .customize-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            color: #fff;
+        }
+        
+        .customize-header h2 {
+            font-size: 2rem;
+        }
+        
+        .customize-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .customize-content {
+            display: flex;
+            padding: 1rem;
+            gap: 2rem;
+            height: calc(100% - 80px);
+        }
+        
+        .preview-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        #previewCanvas {
+            background: #f0f0f0;
+            border-radius: 10px;
+        }
+        
+        .controls-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            overflow-y: auto;
+        }
+        
+        .control-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .control-section h3 {
+            color: #fff;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 0.5rem;
+        }
+        
+        .control-group {
+            margin-bottom: 1rem;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #fff;
+        }
+        
+        /* 预览按钮样式 */
+        .preview-buttons {
+            margin-top: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .preset-button {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .preset-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .presets {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .presets .preset-button {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .control-group input[type="range"] {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        
+        .control-group input[type="color"] {
+            width: 100%;
+            height: 40px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .control-group select {
+            width: 100%;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        
+        .back-button, .play-button, .customize-button {
+            background: #ff6b6b;
+            color: #fff;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .back-button:hover, .play-button:hover, .customize-button:hover {
+            background: #ee5a24;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .customize-button {
+            margin-top: 1rem;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .game-container {
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .start-screen h1 {
+                font-size: 2rem;
+            }
+            
+            .start-button, .restart-button, .back-button, .play-button, .customize-button {
+                font-size: 1.2rem;
+                padding: 0.8rem 1.5rem;
+            }
+            
+            .score, .lives {
+                font-size: 1.2rem;
+            }
+            
+            .customize-content {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .preview-area {
+                height: 300px;
+            }
+            
+            #previewCanvas {
+                width: 250px;
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- 开始界面 -->
+        <div class="start-screen" id="startScreen">
+            <h1>打爆老板</h1>
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button class="start-button" id="startButton">开始游戏</button>
+                <button class="start-button" id="standButton">立正挨打</button>
+            </div>
+            <button class="customize-button" id="customizeButton" style="margin-top: 1rem;">自定义老板</button>
+        </div>
+        
+        <!-- 捏脸界面 -->
+        <div class="customize-screen" id="customizeScreen" style="display: none;">
+            <div class="customize-header">
+                <h2>自定义老板</h2>
+                <div class="customize-buttons">
+                    <button class="back-button" id="backButton">返回</button>
+                    <button class="play-button" id="playButton">开始游戏</button>
+                </div>
+            </div>
+            <div class="customize-content">
+                <div class="preview-area">
+                    <canvas id="previewCanvas" width="300" height="300"></canvas>
+                    <div class="preview-buttons">
+                        <button class="preset-button" id="randomButton">随机生成</button>
+                        <div class="presets">
+                            <button class="preset-button" data-preset="cute">可爱</button>
+                            <button class="preset-button" data-preset="angry">愤怒</button>
+                            <button class="preset-button" data-preset="funny">搞笑</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="controls-area">
+                    <div class="control-section">
+                        <h3>面部特征</h3>
+                        <div class="control-group">
+                            <label>脸型</label>
+                            <select id="faceShape">
+                                <option value="circle">圆形</option>
+                                <option value="square">方形</option>
+                                <option value="oval">椭圆形</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>肤色</label>
+                            <input type="color" id="skinColor" value="#ffdbac">
+                        </div>
+                    </div>
+                    
+                    <div class="control-section">
+                        <h3>眼睛</h3>
+                        <div class="control-group">
+                            <label>眼睛大小: <span id="eyeSizeValue">10</span></label>
+                            <input type="range" id="eyeSize" min="5" max="25" value="10">
+                        </div>
+                        <div class="control-group">
+                            <label>眼睛间距: <span id="eyeSpacingValue">30</span></label>
+                            <input type="range" id="eyeSpacing" min="20" max="50" value="30">
+                        </div>
+                        <div class="control-group">
+                            <label>眼睛颜色</label>
+                            <input type="color" id="eyeColor" value="#000000">
+                        </div>
+                    </div>
+                    
+                    <div class="control-section">
+                        <h3>嘴巴</h3>
+                        <div class="control-group">
+                            <label>嘴巴大小: <span id="mouthSizeValue">40</span></label>
+                            <input type="range" id="mouthSize" min="20" max="80" value="40">
+                        </div>
+                        <div class="control-group">
+                            <label>嘴巴形状</label>
+                            <select id="mouthShape">
+                                <option value="smile">微笑</option>
+                                <option value="frown">皱眉</option>
+                                <option value="neutral">中性</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="control-section">
+                        <h3>头发和眉毛</h3>
+                        <div class="control-group">
+                            <label>发型</label>
+                            <select id="hairStyle">
+                                <option value="none">无</option>
+                                <option value="short">短发</option>
+                                <option value="long">长发</option>
+                                <option value="bald">秃头</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>头发颜色</label>
+                            <input type="color" id="hairColor" value="#333333">
+                        </div>
+                        <div class="control-group">
+                            <label>眉毛粗细: <span id="eyebrowThicknessValue">3</span></label>
+                            <input type="range" id="eyebrowThickness" min="1" max="10" value="3">
+                        </div>
+                    </div>
+                    
+                    <div class="control-section">
+                        <h3>衣物</h3>
+                        <div class="control-group">
+                            <label>上衣</label>
+                            <select id="topStyle">
+                                <option value="none">无</option>
+                                <option value="shirt">衬衫</option>
+                                <option value="tshirt">T恤</option>
+                                <option value="jacket">夹克</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>上衣颜色</label>
+                            <input type="color" id="topColor" value="#3498db">
+                        </div>
+                        <div class="control-group">
+                            <label>裤子</label>
+                            <select id="pantsStyle">
+                                <option value="none">无</option>
+                                <option value="jeans">牛仔裤</option>
+                                <option value="pants">长裤</option>
+                                <option value="shorts">短裤</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>裤子颜色</label>
+                            <input type="color" id="pantsColor" value="#2c3e50">
+                        </div>
+                        <div class="control-group">
+                            <label>鞋子</label>
+                            <select id="shoesStyle">
+                                <option value="none">无</option>
+                                <option value="sneakers">运动鞋</option>
+                                <option value="boots">靴子</option>
+                                <option value="formal">正装鞋</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>鞋子颜色</label>
+                            <input type="color" id="shoesColor" value="#34495e">
+                        </div>
+                        <div class="control-group">
+                            <label>配饰</label>
+                            <select id="accessoryStyle">
+                                <option value="none">无</option>
+                                <option value="glasses">眼镜</option>
+                                <option value="hat">帽子</option>
+                                <option value="necklace">项链</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 游戏界面 -->
+        <div class="game-screen" id="gameScreen">
+            <div class="game-header">
+                <button class="home-button" id="homeButton">返回首页</button>
+                <div class="score">分数: <span id="score">0</span></div>
+                <div class="lives">连击数: <span id="lives">0</span></div>
+                <div class="time">时间: <span id="time">30</span></div>
+            </div>
+            <canvas id="gameCanvas" width="800" height="520"></canvas>
+        </div>
+        
+        <!-- 结束界面 -->
+        <div class="end-screen" id="endScreen">
+            <h2>游戏结束</h2>
+            <div class="final-score">最终分数: <span id="finalScore">0</span></div>
+            <button class="restart-button" id="restartButton">重新开始</button>
+        </div>
+    </div>
+    
+    <script>
+        // 游戏对象
+        const game = {
+            canvas: null,
+            ctx: null,
+            previewCanvas: null,
+            previewCtx: null,
+            score: 0,
+            combo: 0, // 连击数
+            maxCombo: 0, // 最大连击数
+            isPlaying: false,
+            gameTime: 0, // 游戏时间（秒）
+            maxTime: 120, // 最大游戏时间（2分钟）
+            bossIsMoving: true, // 老板是否移动
+            boss: {
+                x: 300,
+                y: 200,
+                width: 200,
+                height: 200,
+                dx: 2,
+                dy: 2
+            },
+            // 捏脸数据
+            customize: {
+                faceShape: 'circle',
+                skinColor: '#ffdbac',
+                eyeSize: 10,
+                eyeSpacing: 30,
+                eyeColor: '#000000',
+                mouthSize: 40,
+                mouthShape: 'smile',
+                hairStyle: 'none',
+                hairColor: '#333333',
+                eyebrowThickness: 3,
+                // 衣物数据
+                topStyle: 'none',
+                topColor: '#3498db',
+                pantsStyle: 'none',
+                pantsColor: '#2c3e50',
+                shoesStyle: 'none',
+                shoesColor: '#34495e',
+                accessoryStyle: 'none'
+            },
+            particles: [],
+            clicks: []
+        };
+        
+        // 初始化游戏
+        function init() {
+            // 初始化游戏画布
+            game.canvas = document.getElementById('gameCanvas');
+            game.ctx = game.canvas.getContext('2d');
+            
+            // 初始化预览画布
+            game.previewCanvas = document.getElementById('previewCanvas');
+            game.previewCtx = game.previewCanvas.getContext('2d');
+            
+            // 设置canvas大小
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // 添加事件监听
+        document.getElementById('startButton').addEventListener('click', () => {
+            game.bossIsMoving = true;
+            startGame();
+        });
+        document.getElementById('standButton').addEventListener('click', () => {
+            game.bossIsMoving = false;
+            startGame();
+        });
+        document.getElementById('restartButton').addEventListener('click', restartGame);
+        
+        // 返回首页按钮事件
+        document.getElementById('homeButton').addEventListener('click', () => {
+            // 重置游戏状态
+            game.isPlaying = false;
+            
+            // 显示开始界面
+            document.getElementById('gameScreen').style.display = 'none';
+            document.getElementById('endScreen').style.display = 'none';
+            document.getElementById('customizeScreen').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'flex';
+        });
+        
+        // 捏脸界面事件
+        document.getElementById('customizeButton').addEventListener('click', showCustomizeScreen);
+        document.getElementById('backButton').addEventListener('click', hideCustomizeScreen);
+        document.getElementById('playButton').addEventListener('click', startGame);
+            
+            // 添加点击和触摸事件
+            game.canvas.addEventListener('click', handleClick);
+            game.canvas.addEventListener('touchstart', handleTouch);
+            
+            // 捏脸控件事件
+            setupCustomizeControls();
+            
+            // 绘制初始预览
+            drawPreview();
+            
+            // 开始游戏循环
+            gameLoop();
+        }
+        
+        // 调整canvas大小
+        function resizeCanvas() {
+            const container = document.querySelector('.game-screen');
+            game.canvas.width = container.clientWidth;
+            game.canvas.height = container.clientHeight - 80;
+        }
+        
+        // 显示捏脸界面
+        function showCustomizeScreen() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('customizeScreen').style.display = 'block';
+        }
+        
+        // 隐藏捏脸界面
+        function hideCustomizeScreen() {
+            document.getElementById('customizeScreen').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'flex';
+        }
+        
+        // 预设模板
+        const presets = {
+            cute: {
+                faceShape: 'circle',
+                skinColor: '#ffdbac',
+                eyeSize: 15,
+                eyeSpacing: 25,
+                eyeColor: '#4a69bd',
+                mouthSize: 30,
+                mouthShape: 'smile',
+                hairStyle: 'short',
+                hairColor: '#ff9ff3',
+                eyebrowThickness: 2
+            },
+            angry: {
+                faceShape: 'square',
+                skinColor: '#f8c291',
+                eyeSize: 12,
+                eyeSpacing: 35,
+                eyeColor: '#e74c3c',
+                mouthSize: 35,
+                mouthShape: 'frown',
+                hairStyle: 'long',
+                hairColor: '#e67e22',
+                eyebrowThickness: 8
+            },
+            funny: {
+                faceShape: 'oval',
+                skinColor: '#ffeaa7',
+                eyeSize: 18,
+                eyeSpacing: 20,
+                eyeColor: '#2ecc71',
+                mouthSize: 50,
+                mouthShape: 'smile',
+                hairStyle: 'bald',
+                hairColor: '#34495e',
+                eyebrowThickness: 1
+            }
+        };
+        
+        // 设置捏脸控件事件
+        function setupCustomizeControls() {
+            // 获取所有控件
+            const controls = {
+                faceShape: document.getElementById('faceShape'),
+                skinColor: document.getElementById('skinColor'),
+                eyeSize: document.getElementById('eyeSize'),
+                eyeSpacing: document.getElementById('eyeSpacing'),
+                eyeColor: document.getElementById('eyeColor'),
+                mouthSize: document.getElementById('mouthSize'),
+                mouthShape: document.getElementById('mouthShape'),
+                hairStyle: document.getElementById('hairStyle'),
+                hairColor: document.getElementById('hairColor'),
+                eyebrowThickness: document.getElementById('eyebrowThickness')
+            };
+            
+            // 事件监听
+            controls.faceShape.addEventListener('change', (e) => {
+                game.customize.faceShape = e.target.value;
+                drawPreview();
+            });
+            
+            controls.skinColor.addEventListener('change', (e) => {
+                game.customize.skinColor = e.target.value;
+                drawPreview();
+            });
+            
+            controls.eyeSize.addEventListener('input', (e) => {
+                game.customize.eyeSize = parseInt(e.target.value);
+                document.getElementById('eyeSizeValue').textContent = e.target.value;
+                drawPreview();
+            });
+            
+            controls.eyeSpacing.addEventListener('input', (e) => {
+                game.customize.eyeSpacing = parseInt(e.target.value);
+                document.getElementById('eyeSpacingValue').textContent = e.target.value;
+                drawPreview();
+            });
+            
+            controls.eyeColor.addEventListener('change', (e) => {
+                game.customize.eyeColor = e.target.value;
+                drawPreview();
+            });
+            
+            controls.mouthSize.addEventListener('input', (e) => {
+                game.customize.mouthSize = parseInt(e.target.value);
+                document.getElementById('mouthSizeValue').textContent = e.target.value;
+                drawPreview();
+            });
+            
+            controls.mouthShape.addEventListener('change', (e) => {
+                game.customize.mouthShape = e.target.value;
+                drawPreview();
+            });
+            
+            controls.hairStyle.addEventListener('change', (e) => {
+                game.customize.hairStyle = e.target.value;
+                drawPreview();
+            });
+            
+            controls.hairColor.addEventListener('change', (e) => {
+                game.customize.hairColor = e.target.value;
+                drawPreview();
+            });
+            
+            controls.eyebrowThickness.addEventListener('input', (e) => {
+                game.customize.eyebrowThickness = parseInt(e.target.value);
+                document.getElementById('eyebrowThicknessValue').textContent = e.target.value;
+                drawPreview();
+            });
+            
+            // 预设按钮事件
+            document.getElementById('randomButton').addEventListener('click', generateRandomCharacter);
+            
+            // 预设模板事件
+            document.querySelectorAll('.preset-button[data-preset]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const presetName = button.dataset.preset;
+                    applyPreset(presetName);
+                });
+            });
+            
+            // 衣物控件事件
+            document.getElementById('topStyle').addEventListener('change', (e) => {
+                game.customize.topStyle = e.target.value;
+                drawPreview();
+            });
+            
+            document.getElementById('topColor').addEventListener('change', (e) => {
+                game.customize.topColor = e.target.value;
+                drawPreview();
+            });
+            
+            document.getElementById('pantsStyle').addEventListener('change', (e) => {
+                game.customize.pantsStyle = e.target.value;
+                drawPreview();
+            });
+            
+            document.getElementById('pantsColor').addEventListener('change', (e) => {
+                game.customize.pantsColor = e.target.value;
+                drawPreview();
+            });
+            
+            document.getElementById('shoesStyle').addEventListener('change', (e) => {
+                game.customize.shoesStyle = e.target.value;
+                drawPreview();
+            });
+            
+            document.getElementById('shoesColor').addEventListener('change', (e) => {
+                game.customize.shoesColor = e.target.value;
+                drawPreview();
+            });
+            
+            document.getElementById('accessoryStyle').addEventListener('change', (e) => {
+                game.customize.accessoryStyle = e.target.value;
+                drawPreview();
+            });
+        }
+        
+        // 应用预设模板
+        function applyPreset(presetName) {
+            const preset = presets[presetName];
+            if (!preset) return;
+            
+            // 应用预设值到游戏对象
+            Object.assign(game.customize, preset);
+            
+            // 更新UI控件
+            document.getElementById('faceShape').value = preset.faceShape;
+            document.getElementById('skinColor').value = preset.skinColor;
+            document.getElementById('eyeSize').value = preset.eyeSize;
+            document.getElementById('eyeSizeValue').textContent = preset.eyeSize;
+            document.getElementById('eyeSpacing').value = preset.eyeSpacing;
+            document.getElementById('eyeSpacingValue').textContent = preset.eyeSpacing;
+            document.getElementById('eyeColor').value = preset.eyeColor;
+            document.getElementById('mouthSize').value = preset.mouthSize;
+            document.getElementById('mouthSizeValue').textContent = preset.mouthSize;
+            document.getElementById('mouthShape').value = preset.mouthShape;
+            document.getElementById('hairStyle').value = preset.hairStyle;
+            document.getElementById('hairColor').value = preset.hairColor;
+            document.getElementById('eyebrowThickness').value = preset.eyebrowThickness;
+            document.getElementById('eyebrowThicknessValue').textContent = preset.eyebrowThickness;
+            
+            // 更新衣物控件
+            document.getElementById('topStyle').value = preset.topStyle || 'none';
+            document.getElementById('topColor').value = preset.topColor || '#3498db';
+            document.getElementById('pantsStyle').value = preset.pantsStyle || 'none';
+            document.getElementById('pantsColor').value = preset.pantsColor || '#2c3e50';
+            document.getElementById('shoesStyle').value = preset.shoesStyle || 'none';
+            document.getElementById('shoesColor').value = preset.shoesColor || '#34495e';
+            document.getElementById('accessoryStyle').value = preset.accessoryStyle || 'none';
+            
+            // 重新绘制预览
+            drawPreview();
+        }
+        
+        // 随机生成角色
+        function generateRandomCharacter() {
+            const faceShapes = ['circle', 'square', 'oval'];
+            const mouthShapes = ['smile', 'frown', 'neutral'];
+            const hairStyles = ['none', 'short', 'long', 'bald'];
+            const topStyles = ['none', 'shirt', 'tshirt', 'jacket'];
+            const pantsStyles = ['none', 'jeans', 'pants', 'shorts'];
+            const shoesStyles = ['none', 'sneakers', 'boots', 'formal'];
+            const accessoryStyles = ['none', 'glasses', 'hat', 'necklace'];
+            
+            // 随机生成颜色
+            function randomColor() {
+                return '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+            }
+            
+            // 生成随机肤色（更自然的肤色范围）
+            function randomSkinColor() {
+                const skinColors = ['#ffdbac', '#f8c291', '#fad390', '#e58e26', '#d6a283', '#a57e52', '#6c5ce7', '#ffeaa7', '#fdcb6e', '#e17055'];
+                return skinColors[Math.floor(Math.random() * skinColors.length)];
+            }
+            
+            const randomCustomize = {
+                faceShape: faceShapes[Math.floor(Math.random() * faceShapes.length)],
+                skinColor: randomSkinColor(),
+                eyeSize: Math.floor(Math.random() * 21) + 5, // 5-25
+                eyeSpacing: Math.floor(Math.random() * 31) + 20, // 20-50
+                eyeColor: randomColor(),
+                mouthSize: Math.floor(Math.random() * 61) + 20, // 20-80
+                mouthShape: mouthShapes[Math.floor(Math.random() * mouthShapes.length)],
+                hairStyle: hairStyles[Math.floor(Math.random() * hairStyles.length)],
+                hairColor: randomColor(),
+                eyebrowThickness: Math.floor(Math.random() * 10) + 1, // 1-10
+                // 随机衣物
+                topStyle: topStyles[Math.floor(Math.random() * topStyles.length)],
+                topColor: randomColor(),
+                pantsStyle: pantsStyles[Math.floor(Math.random() * pantsStyles.length)],
+                pantsColor: randomColor(),
+                shoesStyle: shoesStyles[Math.floor(Math.random() * shoesStyles.length)],
+                shoesColor: randomColor(),
+                accessoryStyle: accessoryStyles[Math.floor(Math.random() * accessoryStyles.length)]
+            };
+            
+            // 应用随机值
+            Object.assign(game.customize, randomCustomize);
+            
+            // 更新UI控件
+            document.getElementById('faceShape').value = randomCustomize.faceShape;
+            document.getElementById('skinColor').value = randomCustomize.skinColor;
+            document.getElementById('eyeSize').value = randomCustomize.eyeSize;
+            document.getElementById('eyeSizeValue').textContent = randomCustomize.eyeSize;
+            document.getElementById('eyeSpacing').value = randomCustomize.eyeSpacing;
+            document.getElementById('eyeSpacingValue').textContent = randomCustomize.eyeSpacing;
+            document.getElementById('eyeColor').value = randomCustomize.eyeColor;
+            document.getElementById('mouthSize').value = randomCustomize.mouthSize;
+            document.getElementById('mouthSizeValue').textContent = randomCustomize.mouthSize;
+            document.getElementById('mouthShape').value = randomCustomize.mouthShape;
+            document.getElementById('hairStyle').value = randomCustomize.hairStyle;
+            document.getElementById('hairColor').value = randomCustomize.hairColor;
+            document.getElementById('eyebrowThickness').value = randomCustomize.eyebrowThickness;
+            document.getElementById('eyebrowThicknessValue').textContent = randomCustomize.eyebrowThickness;
+            
+            // 更新衣物控件
+            document.getElementById('topStyle').value = randomCustomize.topStyle;
+            document.getElementById('topColor').value = randomCustomize.topColor;
+            document.getElementById('pantsStyle').value = randomCustomize.pantsStyle;
+            document.getElementById('pantsColor').value = randomCustomize.pantsColor;
+            document.getElementById('shoesStyle').value = randomCustomize.shoesStyle;
+            document.getElementById('shoesColor').value = randomCustomize.shoesColor;
+            document.getElementById('accessoryStyle').value = randomCustomize.accessoryStyle;
+            
+            // 重新绘制预览
+            drawPreview();
+        }
+        
+        // 绘制预览
+        function drawPreview() {
+            const ctx = game.previewCtx;
+            const canvas = game.previewCanvas;
+            
+            // 清空画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制背景
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制自定义老板
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            drawCustomizedBoss(ctx, centerX - 75, centerY - 75, 150, 150);
+        }
+        
+        // 绘制自定义老板
+        function drawCustomizedBoss(ctx, x, y, width, height) {
+            const cust = game.customize;
+            
+            // 绘制头部
+            const headX = x + width / 4;
+            const headY = y + height / 8;
+            const headSize = width / 2;
+            const headCenterX = headX + headSize / 2;
+            const headCenterY = headY + headSize / 2;
+            
+            // 绘制身体（头部正下方）
+            ctx.save();
+            
+            // 计算身体各部分位置
+            const bodyY = headY + headSize; // 身体从头部正下方开始
+            const bodyHeight = height - headSize - height / 8;
+            
+            // 绘制上衣
+            if (cust.topStyle !== 'none') {
+                ctx.fillStyle = cust.topColor;
+                const topHeight = bodyHeight * 0.5;
+                switch(cust.topStyle) {
+                    case 'shirt':
+                        // 衬衫样式
+                        ctx.beginPath();
+                        ctx.moveTo(x, bodyY + topHeight);
+                        ctx.lineTo(x, bodyY + topHeight * 0.2);
+                        ctx.lineTo(x + width * 0.2, bodyY);
+                        ctx.lineTo(x + width * 0.8, bodyY);
+                        ctx.lineTo(x + width, bodyY + topHeight * 0.2);
+                        ctx.lineTo(x + width, bodyY + topHeight);
+                        ctx.closePath();
+                        ctx.fill();
+                        // 衬衫领子
+                        ctx.fillStyle = shadeColor(cust.topColor, 20);
+                        ctx.beginPath();
+                        ctx.moveTo(x + width * 0.4, bodyY);
+                        ctx.lineTo(x + width * 0.35, bodyY + topHeight * 0.3);
+                        ctx.lineTo(x + width * 0.45, bodyY + topHeight * 0.3);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.moveTo(x + width * 0.6, bodyY);
+                        ctx.lineTo(x + width * 0.55, bodyY + topHeight * 0.3);
+                        ctx.lineTo(x + width * 0.65, bodyY + topHeight * 0.3);
+                        ctx.closePath();
+                        ctx.fill();
+                        // 衬衫纽扣
+                        ctx.fillStyle = '#ffffff';
+                        for (let i = 0; i < 5; i++) {
+                            ctx.beginPath();
+                            ctx.arc(x + width / 2, bodyY + topHeight * 0.2 + i * topHeight * 0.15, width * 0.02, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                        break;
+                    case 'tshirt':
+                        // T恤样式
+                        ctx.beginPath();
+                        ctx.moveTo(x, bodyY + topHeight);
+                        ctx.lineTo(x, bodyY + topHeight * 0.3);
+                        ctx.quadraticCurveTo(x, bodyY, x + width * 0.25, bodyY);
+                        ctx.arc(x + width / 2, bodyY, width * 0.15, Math.PI, Math.PI * 2);
+                        ctx.quadraticCurveTo(x + width, bodyY, x + width, bodyY + topHeight * 0.3);
+                        ctx.lineTo(x + width, bodyY + topHeight);
+                        ctx.closePath();
+                        ctx.fill();
+                        // 袖子
+                        ctx.fillRect(x, bodyY + topHeight * 0.3, width * 0.15, topHeight * 0.3);
+                        ctx.fillRect(x + width * 0.85, bodyY + topHeight * 0.3, width * 0.15, topHeight * 0.3);
+                        break;
+                    case 'jacket':
+                        // 夹克样式
+                        ctx.fillStyle = cust.topColor;
+                        ctx.fillRect(x, bodyY, width, topHeight);
+                        // 夹克领子
+                        ctx.fillStyle = shadeColor(cust.topColor, -20);
+                        ctx.fillRect(x + width * 0.3, bodyY, width * 0.4, topHeight * 0.2);
+                        // 夹克拉链
+                        ctx.fillStyle = '#333333';
+                        ctx.fillRect(x + width * 0.49, bodyY, width * 0.02, topHeight);
+                        // 夹克口袋
+                        ctx.strokeStyle = shadeColor(cust.topColor, -20);
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(x + width * 0.15, bodyY + topHeight * 0.6, width * 0.25, topHeight * 0.3);
+                        ctx.strokeRect(x + width * 0.6, bodyY + topHeight * 0.6, width * 0.25, topHeight * 0.3);
+                        break;
+                }
+            }
+            
+            // 绘制裤子
+            if (cust.pantsStyle !== 'none') {
+                ctx.fillStyle = cust.pantsColor;
+                const pantsY = bodyY + bodyHeight * 0.5;
+                const pantsHeight = bodyHeight * 0.4;
+                switch(cust.pantsStyle) {
+                    case 'jeans':
+                        // 牛仔裤样式
+                        ctx.fillRect(x, pantsY, width, pantsHeight);
+                        // 裤腿
+                        ctx.fillRect(x + width * 0.15, pantsY, width * 0.3, pantsHeight);
+                        ctx.fillRect(x + width * 0.55, pantsY, width * 0.3, pantsHeight);
+                        // 牛仔裤口袋
+                        ctx.strokeStyle = shadeColor(cust.pantsColor, -20);
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(x + width * 0.15, pantsY + pantsHeight * 0.1, width * 0.2, pantsHeight * 0.3);
+                        ctx.strokeRect(x + width * 0.65, pantsY + pantsHeight * 0.1, width * 0.2, pantsHeight * 0.3);
+                        // 裤缝线
+                        ctx.strokeStyle = shadeColor(cust.pantsColor, 20);
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(x + width * 0.3, pantsY);
+                        ctx.lineTo(x + width * 0.3, pantsY + pantsHeight);
+                        ctx.moveTo(x + width * 0.7, pantsY);
+                        ctx.lineTo(x + width * 0.7, pantsY + pantsHeight);
+                        ctx.stroke();
+                        break;
+                    case 'pants':
+                        // 长裤样式
+                        ctx.fillRect(x, pantsY, width, pantsHeight);
+                        // 裤腿
+                        ctx.fillRect(x + width * 0.2, pantsY, width * 0.3, pantsHeight);
+                        ctx.fillRect(x + width * 0.5, pantsY, width * 0.3, pantsHeight);
+                        break;
+                    case 'shorts':
+                        // 短裤样式
+                        ctx.beginPath();
+                        ctx.moveTo(x, pantsY);
+                        ctx.lineTo(x, pantsY + pantsHeight * 0.5);
+                        ctx.quadraticCurveTo(x + width * 0.25, pantsY + pantsHeight * 0.6, x + width * 0.25, pantsY + pantsHeight * 0.5);
+                        ctx.lineTo(x + width * 0.75, pantsY + pantsHeight * 0.5);
+                        ctx.quadraticCurveTo(x + width * 0.75, pantsY + pantsHeight * 0.6, x + width, pantsY + pantsHeight * 0.5);
+                        ctx.lineTo(x + width, pantsY);
+                        ctx.closePath();
+                        ctx.fill();
+                        break;
+                }
+            }
+            
+            // 绘制鞋子
+            if (cust.shoesStyle !== 'none') {
+                ctx.fillStyle = cust.shoesColor;
+                const shoesY = bodyY + bodyHeight * 0.9;
+                const shoeWidth = width * 0.4;
+                const shoeHeight = bodyHeight * 0.1;
+                switch(cust.shoesStyle) {
+                    case 'sneakers':
+                        // 运动鞋样式
+                        ctx.beginPath();
+                        ctx.moveTo(x + width * 0.1, shoesY + shoeHeight);
+                        ctx.lineTo(x + width * 0.1, shoesY + shoeHeight * 0.3);
+                        ctx.quadraticCurveTo(x + width * 0.1, shoesY, x + width * 0.2, shoesY);
+                        ctx.lineTo(x + width * 0.5, shoesY);
+                        ctx.quadraticCurveTo(x + width * 0.6, shoesY, x + width * 0.6, shoesY + shoeHeight * 0.3);
+                        ctx.lineTo(x + width * 0.6, shoesY + shoeHeight);
+                        ctx.closePath();
+                        ctx.fill();
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(x + width * 0.5, shoesY + shoeHeight);
+                        ctx.lineTo(x + width * 0.5, shoesY + shoeHeight * 0.3);
+                        ctx.quadraticCurveTo(x + width * 0.5, shoesY, x + width * 0.6, shoesY);
+                        ctx.lineTo(x + width * 0.9, shoesY);
+                        ctx.quadraticCurveTo(x + width, shoesY, x + width, shoesY + shoeHeight * 0.3);
+                        ctx.lineTo(x + width, shoesY + shoeHeight);
+                        ctx.closePath();
+                        ctx.fill();
+                        
+                        // 运动鞋条纹
+                        ctx.fillStyle = shadeColor(cust.shoesColor, 30);
+                        ctx.fillRect(x + width * 0.1, shoesY, shoeWidth, shoeHeight * 0.3);
+                        ctx.fillRect(x + width * 0.5, shoesY, shoeWidth, shoeHeight * 0.3);
+                        break;
+                    case 'boots':
+                        // 靴子样式
+                        ctx.fillStyle = cust.shoesColor;
+                        ctx.fillRect(x + width * 0.1, shoesY - shoeHeight * 0.5, shoeWidth * 0.9, shoeHeight * 1.5);
+                        // 靴筒
+                        ctx.fillStyle = shadeColor(cust.shoesColor, -20);
+                        ctx.fillRect(x + width * 0.15, shoesY - shoeHeight * 0.5, shoeWidth * 0.35, shoeHeight * 0.5);
+                        ctx.fillRect(x + width * 0.5, shoesY - shoeHeight * 0.5, shoeWidth * 0.35, shoeHeight * 0.5);
+                        break;
+                    case 'formal':
+                        // 正装鞋样式
+                        ctx.beginPath();
+                        ctx.moveTo(x + width * 0.1, shoesY + shoeHeight);
+                        ctx.lineTo(x + width * 0.1, shoesY + shoeHeight * 0.5);
+                        ctx.lineTo(x + width * 0.2, shoesY);
+                        ctx.lineTo(x + width * 0.5, shoesY);
+                        ctx.lineTo(x + width * 0.6, shoesY + shoeHeight * 0.5);
+                        ctx.lineTo(x + width * 0.6, shoesY + shoeHeight);
+                        ctx.closePath();
+                        ctx.fill();
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(x + width * 0.5, shoesY + shoeHeight);
+                        ctx.lineTo(x + width * 0.5, shoesY + shoeHeight * 0.5);
+                        ctx.lineTo(x + width * 0.6, shoesY);
+                        ctx.lineTo(x + width * 0.9, shoesY);
+                        ctx.lineTo(x + width, shoesY + shoeHeight * 0.5);
+                        ctx.lineTo(x + width, shoesY + shoeHeight);
+                        ctx.closePath();
+                        ctx.fill();
+                        break;
+                }
+            }
+            
+            ctx.restore();
+            
+            // 添加头部阴影
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+            
+            // 绘制头部
+            const skinGradient = ctx.createLinearGradient(headX, headY, headX, headY + headSize);
+            skinGradient.addColorStop(0, cust.skinColor);
+            skinGradient.addColorStop(1, shadeColor(cust.skinColor, -20));
+            ctx.fillStyle = skinGradient;
+            
+            switch(cust.faceShape) {
+                case 'circle':
+                    ctx.beginPath();
+                    ctx.arc(headCenterX, headCenterY, headSize / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    break;
+                case 'square':
+                    const squareRadius = headSize * 0.1;
+                    ctx.beginPath();
+                    ctx.moveTo(headX + squareRadius, headY);
+                    ctx.lineTo(headX + headSize - squareRadius, headY);
+                    ctx.quadraticCurveTo(headX + headSize, headY, headX + headSize, headY + squareRadius);
+                    ctx.lineTo(headX + headSize, headY + headSize - squareRadius);
+                    ctx.quadraticCurveTo(headX + headSize, headY + headSize, headX + headSize - squareRadius, headY + headSize);
+                    ctx.lineTo(headX + squareRadius, headY + headSize);
+                    ctx.quadraticCurveTo(headX, headY + headSize, headX, headY + headSize - squareRadius);
+                    ctx.lineTo(headX, headY + squareRadius);
+                    ctx.quadraticCurveTo(headX, headY, headX + squareRadius, headY);
+                    ctx.fill();
+                    break;
+                case 'oval':
+                    ctx.beginPath();
+                    ctx.ellipse(headCenterX, headCenterY, headSize / 2, headSize * 0.6, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    break;
+            }
+            
+            // 绘制头发
+            if (cust.hairStyle !== 'none') {
+                ctx.fillStyle = cust.hairColor;
+                
+                switch(cust.hairStyle) {
+                    case 'short':
+                        // 更卡通的短发
+                        ctx.beginPath();
+                        if (cust.faceShape === 'circle') {
+                            ctx.arc(headCenterX, headY + headSize / 3, headSize * 0.65, 0, Math.PI * 2);
+                        } else if (cust.faceShape === 'square') {
+                            ctx.moveTo(headX - headSize * 0.15, headY - headSize * 0.2);
+                            ctx.lineTo(headX - headSize * 0.1, headY + headSize / 3);
+                            ctx.lineTo(headX + headSize + headSize * 0.1, headY + headSize / 3);
+                            ctx.lineTo(headX + headSize + headSize * 0.15, headY - headSize * 0.2);
+                            ctx.closePath();
+                        } else { // oval
+                            ctx.ellipse(headCenterX, headY + headSize / 3, headSize * 0.65, headSize * 0.75, 0, 0, Math.PI * 2);
+                        }
+                        ctx.fill();
+                        break;
+                    case 'long':
+                        // 更卡通的长发
+                        ctx.beginPath();
+                        if (cust.faceShape === 'circle') {
+                            ctx.arc(headCenterX, headY + headSize / 3, headSize * 0.65, 0, Math.PI);
+                        } else if (cust.faceShape === 'square') {
+                            ctx.moveTo(headX - headSize * 0.15, headY + headSize / 3);
+                            ctx.lineTo(headX - headSize * 0.15, headY - headSize * 0.25);
+                            ctx.lineTo(headX + headSize + headSize * 0.15, headY - headSize * 0.25);
+                            ctx.lineTo(headX + headSize + headSize * 0.15, headY + headSize / 3);
+                        } else { // oval
+                            ctx.ellipse(headCenterX, headY + headSize / 3, headSize * 0.65, headSize * 0.75, 0, 0, Math.PI);
+                        }
+                        ctx.fill();
+                        
+                        // 头发两侧
+                        const sideHairHeight = headSize * 0.8;
+                        ctx.fillRect(headX - headSize * 0.15, headY + headSize / 3, headSize * 0.25, sideHairHeight);
+                        ctx.fillRect(headX + headSize * 0.9, headY + headSize / 3, headSize * 0.25, sideHairHeight);
+                        break;
+                    case 'bald':
+                        // 秃头效果，添加高光
+                        ctx.fillStyle = shadeColor(cust.skinColor, 10);
+                        ctx.beginPath();
+                        if (cust.faceShape === 'circle' || cust.faceShape === 'oval') {
+                            ctx.arc(headCenterX, headY + headSize / 3, headSize * 0.45, 0, Math.PI * 2);
+                        } else { // square
+                            ctx.fillRect(headX + headSize * 0.25, headY + headSize * 0.05, headSize * 0.5, headSize * 0.5);
+                        }
+                        ctx.fill();
+                        break;
+                }
+            }
+            
+            // 重置阴影
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            
+            // 眼睛位置
+            const eyeY = headY + headSize / 2;
+            const leftEyeX = headCenterX - cust.eyeSpacing / 2;
+            const rightEyeX = headCenterX + cust.eyeSpacing / 2;
+            
+            // 绘制眉毛
+            ctx.strokeStyle = cust.hairColor;
+            ctx.lineWidth = cust.eyebrowThickness;
+            ctx.lineCap = 'round';
+            
+            // 根据嘴巴形状调整眉毛
+            if (cust.mouthShape === 'smile') {
+                // 微笑时眉毛上扬
+                ctx.beginPath();
+                ctx.moveTo(leftEyeX - cust.eyeSize, eyeY - cust.eyeSize - 8);
+                ctx.quadraticCurveTo(leftEyeX, eyeY - cust.eyeSize - 15, leftEyeX + cust.eyeSize, eyeY - cust.eyeSize - 8);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(rightEyeX - cust.eyeSize, eyeY - cust.eyeSize - 8);
+                ctx.quadraticCurveTo(rightEyeX, eyeY - cust.eyeSize - 15, rightEyeX + cust.eyeSize, eyeY - cust.eyeSize - 8);
+                ctx.stroke();
+            } else if (cust.mouthShape === 'frown') {
+                // 皱眉时眉毛下垂
+                ctx.beginPath();
+                ctx.moveTo(leftEyeX - cust.eyeSize, eyeY - cust.eyeSize - 2);
+                ctx.quadraticCurveTo(leftEyeX, eyeY - cust.eyeSize + 5, leftEyeX + cust.eyeSize, eyeY - cust.eyeSize - 2);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(rightEyeX - cust.eyeSize, eyeY - cust.eyeSize - 2);
+                ctx.quadraticCurveTo(rightEyeX, eyeY - cust.eyeSize + 5, rightEyeX + cust.eyeSize, eyeY - cust.eyeSize - 2);
+                ctx.stroke();
+            } else {
+                // 中性眉毛
+                ctx.beginPath();
+                ctx.moveTo(leftEyeX - cust.eyeSize, eyeY - cust.eyeSize - 5);
+                ctx.lineTo(leftEyeX + cust.eyeSize, eyeY - cust.eyeSize - 5);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(rightEyeX - cust.eyeSize, eyeY - cust.eyeSize - 5);
+                ctx.lineTo(rightEyeX + cust.eyeSize, eyeY - cust.eyeSize - 5);
+                ctx.stroke();
+            }
+            
+            // 绘制眼睛
+            // 眼白
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(leftEyeX, eyeY, cust.eyeSize, 0, Math.PI * 2);
+            ctx.arc(rightEyeX, eyeY, cust.eyeSize, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 瞳孔
+            const pupilGradient = ctx.createRadialGradient(leftEyeX, eyeY, 0, leftEyeX, eyeY, cust.eyeSize * 0.6);
+            pupilGradient.addColorStop(0, shadeColor(cust.eyeColor, 30));
+            pupilGradient.addColorStop(0.5, cust.eyeColor);
+            pupilGradient.addColorStop(1, shadeColor(cust.eyeColor, -30));
+            ctx.fillStyle = pupilGradient;
+            
+            ctx.beginPath();
+            ctx.arc(leftEyeX, eyeY, cust.eyeSize * 0.6, 0, Math.PI * 2);
+            ctx.arc(rightEyeX, eyeY, cust.eyeSize * 0.6, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 高光
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(leftEyeX - cust.eyeSize * 0.2, eyeY - cust.eyeSize * 0.2, cust.eyeSize * 0.2, 0, Math.PI * 2);
+            ctx.arc(rightEyeX - cust.eyeSize * 0.2, eyeY - cust.eyeSize * 0.2, cust.eyeSize * 0.2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 腮红
+            ctx.fillStyle = 'rgba(255, 182, 193, 0.5)';
+            ctx.beginPath();
+            ctx.arc(leftEyeX - cust.eyeSize * 1.2, eyeY + cust.eyeSize * 0.8, cust.eyeSize * 0.8, 0, Math.PI * 2);
+            ctx.arc(rightEyeX + cust.eyeSize * 1.2, eyeY + cust.eyeSize * 0.8, cust.eyeSize * 0.8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 绘制嘴巴
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            const mouthY = headY + headSize * 0.7;
+            const mouthX = headCenterX;
+            
+            switch(cust.mouthShape) {
+                case 'smile':
+                    ctx.fillStyle = '#ff6b6b';
+                    ctx.beginPath();
+                    ctx.arc(mouthX, mouthY + cust.mouthSize * 0.2, cust.mouthSize / 2, 0, Math.PI);
+                    ctx.fill();
+                    // 嘴巴轮廓
+                    ctx.strokeStyle = '#c0392b';
+                    ctx.beginPath();
+                    ctx.arc(mouthX, mouthY + cust.mouthSize * 0.2, cust.mouthSize / 2, 0, Math.PI);
+                    ctx.stroke();
+                    break;
+                case 'frown':
+                    ctx.fillStyle = '#ff6b6b';
+                    ctx.beginPath();
+                    ctx.arc(mouthX, mouthY - cust.mouthSize * 0.2, cust.mouthSize / 2, Math.PI, Math.PI * 2);
+                    ctx.fill();
+                    // 嘴巴轮廓
+                    ctx.strokeStyle = '#c0392b';
+                    ctx.beginPath();
+                    ctx.arc(mouthX, mouthY - cust.mouthSize * 0.2, cust.mouthSize / 2, Math.PI, Math.PI * 2);
+                    ctx.stroke();
+                    break;
+                case 'neutral':
+                    ctx.strokeStyle = '#000000';
+                    ctx.beginPath();
+                    ctx.moveTo(mouthX - cust.mouthSize / 2, mouthY);
+                    ctx.lineTo(mouthX + cust.mouthSize / 2, mouthY);
+                    ctx.stroke();
+                    break;
+            }
+            
+            // 头部高光
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.beginPath();
+            ctx.arc(headCenterX - headSize * 0.2, headCenterY - headSize * 0.2, headSize * 0.15, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 绘制配饰
+            if (cust.accessoryStyle !== 'none') {
+                switch(cust.accessoryStyle) {
+                    case 'glasses':
+                        // 眼镜
+                        ctx.strokeStyle = '#333333';
+                        ctx.lineWidth = 3;
+                        // 眼镜框
+                        ctx.beginPath();
+                        ctx.arc(leftEyeX, eyeY, cust.eyeSize * 1.3, 0, Math.PI * 2);
+                        ctx.arc(rightEyeX, eyeY, cust.eyeSize * 1.3, 0, Math.PI * 2);
+                        ctx.stroke();
+                        // 眼镜鼻梁
+                        ctx.beginPath();
+                        ctx.moveTo(leftEyeX + cust.eyeSize * 1.3, eyeY);
+                        ctx.lineTo(rightEyeX - cust.eyeSize * 1.3, eyeY);
+                        ctx.stroke();
+                        break;
+                    case 'hat':
+                        // 帽子
+                        ctx.fillStyle = '#ff6b6b';
+                        // 帽檐
+                        ctx.fillRect(headX - headSize * 0.1, headY + headSize * 0.1, headSize * 1.2, headSize * 0.1);
+                        // 帽身
+                        ctx.fillRect(headX, headY - headSize * 0.2, headSize, headSize * 0.3);
+                        break;
+                    case 'necklace':
+                        // 项链
+                        ctx.strokeStyle = '#f39c12';
+                        ctx.lineWidth = 4;
+                        ctx.beginPath();
+                        ctx.arc(headCenterX, headY + headSize, headSize * 0.3, 0, Math.PI);
+                        ctx.stroke();
+                        // 吊坠
+                        ctx.fillStyle = '#f39c12';
+                        ctx.beginPath();
+                        ctx.arc(headCenterX, headY + headSize * 1.3, headSize * 0.08, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+                }
+            }
+        }
+        
+        // 辅助函数：调整颜色亮度
+        function shadeColor(color, percent) {
+            let R = parseInt(color.substring(1, 3), 16);
+            let G = parseInt(color.substring(3, 5), 16);
+            let B = parseInt(color.substring(5, 7), 16);
+            
+            R = Math.round(R * (100 + percent) / 100);
+            G = Math.round(G * (100 + percent) / 100);
+            B = Math.round(B * (100 + percent) / 100);
+            
+            R = Math.min(255, Math.max(0, R));
+            G = Math.min(255, Math.max(0, G));
+            B = Math.min(255, Math.max(0, B));
+            
+            return '#' + ((R << 16) | (G << 8) | B).toString(16).padStart(6, '0');
+        }
+        
+        // 开始游戏
+        function startGame() {
+            game.score = 0;
+            game.combo = 0;
+            game.maxCombo = 0;
+            game.gameTime = 0;
+            game.isPlaying = true;
+            game.particles = [];
+            game.clicks = [];
+            
+            // 显示游戏界面
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('customizeScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'block';
+            document.getElementById('endScreen').style.display = 'none';
+            
+            // 重新调整canvas大小（因为现在游戏界面可见了）
+            resizeCanvas();
+            
+            // 设置老板初始位置
+            game.boss.x = game.canvas.width / 2 - 100;
+            game.boss.y = game.canvas.height / 2 - 100;
+            
+            // 更新UI
+            updateScore();
+            updateCombo();
+            updateTime();
+        }
+        
+        // 重新开始游戏
+        function restartGame() {
+            startGame();
+        }
+        
+        // 处理点击事件
+        function handleClick(e) {
+            if (!game.isPlaying) return;
+            
+            const rect = game.canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            checkBossHit(x, y);
+        }
+        
+        // 处理触摸事件
+        function handleTouch(e) {
+            if (!game.isPlaying) return;
+            e.preventDefault();
+            
+            const rect = game.canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            
+            checkBossHit(x, y);
+        }
+        
+        // 初始化音频上下文
+        let audioContext = null;
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        
+        // 播放挨打音效
+        function playHitSound() {
+            initAudio();
+            
+            // 创建振荡器
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // 设置音效参数
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.2);
+            
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+            
+            oscillator.type = 'sawtooth';
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        }
+        
+        // 检查是否击中老板
+        function checkBossHit(x, y) {
+            if (x >= game.boss.x && x <= game.boss.x + game.boss.width &&
+                y >= game.boss.y && y <= game.boss.y + game.boss.height) {
+                
+                // 击中老板
+                game.combo++;
+                game.maxCombo = Math.max(game.maxCombo, game.combo);
+                
+                // 根据连击数计算分数
+                const hitScore = 10 + (game.combo - 1) * 5;
+                game.score += hitScore;
+                
+                // 播放挨打音效
+                playHitSound();
+                
+                // 添加点击效果
+                game.clicks.push({
+                    x: x,
+                    y: y,
+                    scale: 0,
+                    opacity: 1
+                });
+                
+                // 增强粒子效果
+                for (let i = 0; i < 20; i++) {
+                    game.particles.push({
+                        x: x,
+                        y: y,
+                        vx: (Math.random() - 0.5) * 15,
+                        vy: (Math.random() - 0.5) * 15,
+                        life: 1,
+                        decay: Math.random() * 0.1 + 0.05,
+                        color: `hsl(${Math.random() * 60 + 0}, 100%, 50%)` // 随机红色到黄色
+                    });
+                }
+                
+                // 添加老板抖动效果
+                if (!game.bossIsMoving) {
+                    // 老板不动时，添加更大的抖动
+                    game.boss.x += (Math.random() - 0.5) * 20;
+                    game.boss.y += (Math.random() - 0.5) * 20;
+                }
+                
+                // 更新UI
+                updateScore();
+                updateCombo();
+            } else {
+                // 未击中，重置连击数
+                game.combo = 0;
+                updateCombo();
+            }
+        }
+        
+        // 更新分数
+        function updateScore() {
+            document.getElementById('score').textContent = game.score;
+        }
+        
+        // 更新连击数
+        function updateCombo() {
+            document.getElementById('lives').textContent = game.combo;
+        }
+        
+        // 更新时间
+        function updateTime() {
+            document.getElementById('time').textContent = Math.ceil(game.maxTime - game.gameTime);
+        }
+        
+        // 结束游戏
+        function endGame() {
+            game.isPlaying = false;
+            
+            // 更新最终分数
+            document.getElementById('finalScore').textContent = game.score;
+            
+            // 显示结束界面
+            document.getElementById('gameScreen').style.display = 'none';
+            document.getElementById('endScreen').style.display = 'flex';
+        }
+        
+        // 绘制老板
+        function drawBoss() {
+            const ctx = game.ctx;
+            drawCustomizedBoss(ctx, game.boss.x, game.boss.y, game.boss.width, game.boss.height);
+        }
+        
+        // 绘制粒子效果
+        function drawParticles() {
+            const ctx = game.ctx;
+            
+            for (let i = game.particles.length - 1; i >= 0; i--) {
+                const p = game.particles[i];
+                
+                // 使用粒子的颜色属性
+                ctx.fillStyle = p.color ? p.color.replace(')', `, ${p.life})`) : `rgba(255, 107, 107, ${p.life})`;
+                
+                // 绘制圆形粒子，看起来更柔和
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= p.decay;
+                
+                if (p.life <= 0) {
+                    game.particles.splice(i, 1);
+                }
+            }
+        }
+        
+        // 绘制点击效果
+        function drawClicks() {
+            const ctx = game.ctx;
+            
+            for (let i = game.clicks.length - 1; i >= 0; i--) {
+                const c = game.clicks[i];
+                
+                ctx.strokeStyle = `rgba(255, 255, 255, ${c.opacity})`;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(c.x, c.y, c.scale, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                c.scale += 2;
+                c.opacity -= 0.05;
+                
+                if (c.opacity <= 0) {
+                    game.clicks.splice(i, 1);
+                }
+            }
+        }
+        
+        // 更新老板位置
+        function updateBoss() {
+            if (!game.isPlaying) return;
+            
+            if (game.bossIsMoving) {
+                // 随机移动老板
+                game.boss.x += game.boss.dx;
+                game.boss.y += game.boss.dy;
+                
+                // 边界检测
+                if (game.boss.x <= 0 || game.boss.x + game.boss.width >= game.canvas.width) {
+                    game.boss.dx *= -1;
+                }
+                if (game.boss.y <= 0 || game.boss.y + game.boss.height >= game.canvas.height) {
+                    game.boss.dy *= -1;
+                }
+            } else {
+                // 老板不动，保持在屏幕中心
+                game.boss.x = game.canvas.width / 2 - game.boss.width / 2;
+                game.boss.y = game.canvas.height / 2 - game.boss.height / 2;
+            }
+        }
+        
+        // 游戏循环
+        let lastTime = Date.now();
+        function gameLoop() {
+            // 计算时间差
+            const currentTime = Date.now();
+            const deltaTime = (currentTime - lastTime) / 1000;
+            lastTime = currentTime;
+            
+            // 清空画布
+            game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
+            
+            // 绘制背景
+            game.ctx.fillStyle = '#f0f0f0';
+            game.ctx.fillRect(0, 0, game.canvas.width, game.canvas.height);
+            
+            if (game.isPlaying) {
+                // 更新游戏时间
+                game.gameTime += deltaTime;
+                
+                // 更新游戏状态
+                updateBoss();
+                
+                // 更新UI
+                updateTime();
+                
+                // 检查游戏是否结束
+                if (game.gameTime >= game.maxTime) {
+                    endGame();
+                }
+            }
+            
+            // 绘制游戏元素
+            drawBoss();
+            drawParticles();
+            drawClicks();
+            
+            // 循环调用
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // 页面加载完成后初始化游戏
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
